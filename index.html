@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Sanjaya</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+        .font-lora {
+            font-family: 'Lora', serif;
+        }
+        /* Styling untuk Animasi Scroll */
+        .scroll-animate {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .scroll-animate.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        /* Keyframes untuk animasi fade-in di hero section */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .animate-fade-in-down {
+            animation: fadeInDown 1s ease-out forwards;
+        }
+    </style>
+    <script>
+        // Konfigurasi Tailwind untuk dark mode
+        tailwind.config = {
+          darkMode: 'class',
+        }
+        // Cek tema dari localStorage dan terapkan sebelum halaman dimuat untuk menghindari kedipan
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark')
+        } else {
+          document.documentElement.classList.remove('dark')
+        }
+    </script>
+</head>
+<body class="bg-[#fdfdfd] text-[#333333] dark:bg-[#262626] dark:text-[#f5f5f5] transition-colors duration-300">
+
+    <!-- Header -->
+    <header class="bg-white/80 dark:bg-gray-800/50 backdrop-blur-lg shadow-md sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="text-2xl font-lora font-bold text-gray-800 dark:text-white">
+                Family Sanjaya
+            </div>
+            <div class="hidden md:flex items-center space-x-6">
+                <a href="index.html" class="text-gray-600 dark:text-gray-300 hover:text-[#008080] dark:hover:text-white transition-colors">Beranda</a>
+                <a href="galeri.html" class="text-gray-600 dark:text-gray-300 hover:text-[#008080] dark:hover:text-white transition-colors">Galeri</a>
+                <a href="silsilah.html" class="text-gray-600 dark:text-gray-300 hover:text-[#008080] dark:hover:text-white transition-colors">Pohon Keluarga</a>
+                <a href="linimasa.html" class="text-gray-600 dark:text-gray-300 hover:text-[#008080] dark:hover:text-white transition-colors">Linimasa</a>
+                <button id="theme-toggle" class="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
+                    <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                    <svg id="theme-toggle-light-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+                </button>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden text-gray-700 dark:text-gray-300 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </nav>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4">
+             <a href="#beranda" class="block py-2 text-gray-600 dark:text-gray-300">Beranda</a>
+             <a href="galeri.html" class="block py-2 text-gray-600 dark:text-gray-300">Galeri</a>
+             <a href="silsilah.html" class="block py-2 text-gray-600 dark:text-gray-300">Pohon Keluarga</a>
+             <a href="linimasa.html" class="block py-2 text-gray-600 dark:text-gray-300">Linimasa</a>
+        </div>
+    </header>
+
+    <main>
+        <!-- Bagian Beranda dengan Video -->
+        <section id="beranda" class="relative h-screen flex items-center justify-center text-center overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-full z-0">
+                <video autoplay loop muted playsinline class="w-full h-full object-cover">
+                    <source src="video/video banner.mp4" type="video/mp4">
+                    Browser Anda tidak mendukung tag video.
+                </video>
+                <div class="absolute top-0 left-0 w-full h-full bg-black/50"></div>
+            </div>
+            <div class="relative z-10 container mx-auto px-6">
+                <div class="max-w-4xl mx-auto">
+                    <h1 class="text-4xl md:text-6xl font-lora font-bold text-white mb-4 animate-fade-in-down" style="animation-delay: 0.2s;">Merajut Kenangan, Merayakan Kebersamaan</h1>
+                    <p class="text-lg text-gray-200 mb-8 max-w-2xl mx-auto animate-fade-in-down" style="animation-delay: 0.4s;">"Keluarga adalah tempat di mana hidup dimulai dan cinta tidak pernah berakhir."</p>
+                    <a href="galeri.html" class="bg-[#008080] hover:bg-[#006666] dark:bg-[#c89b6c] dark:hover:bg-[#b38960] text-white dark:text-[#262626] py-3 px-8 rounded-full text-lg font-semibold transition-colors animate-fade-in-down" style="animation-delay: 0.6s;">Jelajahi Momen Kami</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bagian Pratinjau Galeri -->
+        <section id="galeri" class="py-20 px-6 bg-[#f7f7f7] dark:bg-[#1f1f1f]">
+            <div class="container mx-auto">
+                <h2 class="text-4xl font-lora font-bold text-center text-gray-800 dark:text-white mb-4 scroll-animate">Momen Berharga</h2>
+                <p class="text-center text-gray-600 dark:text-gray-300 mb-12 max-w-2xl mx-auto scroll-animate">Beberapa cuplikan kenangan yang kami abadikan. Lihat lebih banyak di galeri kami.</p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                    <div class="gallery-img-container scroll-animate"><img src="gambar/gambar1.jpg" alt="Foto Keluarga 1" class="w-full h-full object-cover"></div>
+                    <div class="gallery-img-container scroll-animate"><img src="gambar/gambar3.jpg" alt="Foto Keluarga 2" class="w-full h-full object-cover"></div>
+                    <div class="gallery-img-container scroll-animate"><img src="https://placehold.co/600x400/e0e0e0/333?text=Kumpul" alt="Foto Keluarga 3" class="w-full h-full object-cover"></div>
+                    <div class="gallery-img-container scroll-animate"><img src="https://placehold.co/600x400/e0e0e0/333?text=Wisuda" alt="Foto Keluarga 4" class="w-full h-full object-cover"></div>
+                </div>
+                <div class="text-center mt-12 scroll-animate">
+                     <a href="galeri.html" class="bg-[#008080] hover:bg-[#006666] dark:bg-[#c89b6c] dark:hover:bg-[#b38960] text-white dark:text-[#262626] py-3 px-8 rounded-full text-lg font-semibold transition-colors">Lihat Galeri Lengkap</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bagian Ajakan Pohon Keluarga -->
+        <section class="py-20 px-6 text-center">
+            <div class="container mx-auto">
+                <h2 class="text-4xl font-lora font-bold text-gray-800 dark:text-white mb-4 scroll-animate">Jelajahi Silsilah Kami</h2>
+                <p class="text-lg text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto scroll-animate">Lihat bagaimana cabang-cabang keluarga kami terhubung dalam sebuah ikatan yang indah.</p>
+                <a href="silsilah.html" class="bg-[#008080] hover:bg-[#006666] dark:bg-[#c89b6c] dark:hover:bg-[#b38960] text-white dark:text-[#262626] py-3 px-8 rounded-full text-lg font-semibold transition-colors scroll-animate">Lihat Pohon Keluarga</a>
+            </div>
+        </section>
+
+        <!-- Bagian Pratinjau Linimasa -->
+        <section id="linimasa-preview" class="py-20 px-6 bg-[#f7f7f7] dark:bg-[#1f1f1f]">
+            <div class="container mx-auto">
+                <h2 class="text-4xl font-lora font-bold text-center text-gray-800 dark:text-white mb-16 scroll-animate">Pratinjau Jejak Kenangan</h2>
+                <div class="max-w-3xl mx-auto space-y-12">
+                    <!-- Item 1 -->
+                    <div class="scroll-animate relative pl-10 border-l-3 border-gray-200 dark:border-gray-700">
+                        <div class="absolute -left-[11px] top-1 w-5 h-5 bg-[#ff7f50] dark:bg-[#c89b6c] rounded-full border-4 border-[#fdfdfd] dark:border-[#1f1f1f]"></div>
+                        <p class="font-semibold text-[#ff7f50] dark:text-[#c89b6c] mb-1">1985</p>
+                        <h3 class="text-2xl font-lora text-gray-800 dark:text-white mb-2">Pernikahan Kakek & Nenek</h3>
+                        <p class="text-gray-600 dark:text-gray-300">Awal dari perjalanan keluarga kami, sebuah ikatan suci yang penuh cinta dan harapan.</p>
+                    </div>
+                    <!-- Item 2 -->
+                    <div class="scroll-animate relative pl-10 border-l-3 border-gray-200 dark:border-gray-700">
+                        <div class="absolute -left-[11px] top-1 w-5 h-5 bg-[#ff7f50] dark:bg-[#c89b6c] rounded-full border-4 border-[#fdfdfd] dark:border-[#1f1f1f]"></div>
+                        <p class="font-semibold text-[#ff7f50] dark:text-[#c89b6c] mb-1">1990</p>
+                        <h3 class="text-2xl font-lora text-gray-800 dark:text-white mb-2">Kelahiran Ayah</h3>
+                        <p class="text-gray-600 dark:text-gray-300">Momen sukacita menyambut kehadiran generasi penerus pertama.</p>
+                    </div>
+                </div>
+                <div class="text-center mt-12 scroll-animate">
+                     <a href="linimasa.html" class="bg-[#008080] hover:bg-[#006666] dark:bg-[#c89b6c] dark:hover:bg-[#b38960] text-white dark:text-[#262626] py-3 px-8 rounded-full text-lg font-semibold transition-colors">Lihat Linimasa Lengkap</a>
+                </div>
+            </div>
+        </section>
+        
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 dark:bg-gray-900/50 py-8">
+        <div class="container mx-auto px-6 text-center text-gray-300 dark:text-gray-400">
+            <p class="mb-4">&copy; 2024 Family Sanjaya. Dibuat dengan cinta dan secangkir kopi.</p>
+            <div class="flex justify-center space-x-6">
+                <!-- TikTok -->
+                <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-2.43.05-4.86-.95-6.69-2.81-1.77-1.8-2.55-4.16-2.4-6.6s.92-4.67 2.56-6.44c1.64-1.77 3.9-2.79 6.22-2.82.02 3.18-.01 6.36-.01 9.53Z"/></svg>
+                </a>
+                <!-- Instagram -->
+                <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.85s-.011 3.584-.069 4.85c-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.85-.07-3.252-.148-4.771-1.691-4.919-4.919-.058-1.265-.069-1.645-.069-4.85s.011-3.584.069-4.85c.149-3.225 1.664-4.771 4.919-4.919 1.266-.057 1.644-.069 4.85-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.162 6.162 6.162 6.162-2.759 6.162-6.162-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4s1.791-4 4-4 4 1.79 4 4-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44 1.441-.645 1.441-1.44-.645-1.44-1.441-1.44z"/></svg>
+                </a>
+                <!-- WhatsApp -->
+                <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21 5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2zM12.04 20.15c-1.49 0-2.93-.39-4.19-1.12l-.3-.18-3.12.82.83-3.04-.2-.31c-.82-1.31-1.26-2.83-1.26-4.41 0-4.54 3.7-8.24 8.24-8.24 2.2 0 4.23.86 5.82 2.45s2.45 3.62 2.45 5.82c0 4.54-3.7 8.24-8.24 8.24zm4.52-6.16c-.25-.12-1.47-.72-1.7-.81-.23-.08-.39-.12-.56.12-.17.25-.64.81-.79.97-.15.17-.29.19-.54.06-.25-.12-1.06-.39-2.02-1.25-.75-.67-1.25-1.5-1.4-1.75-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.13-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.4-.42-.55-.42-.14 0-.3 0-.46 0-.16 0-.41.06-.62.3.22.25-.83 1.02-.83 2.49 0 1.46.85 2.89 1 3.1.14.25 1.71 2.62 4.14 3.63.59.25 1.05.4 1.41.51.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.14-1.18-.05-.12-.2-.19-.44-.31z"/></svg>
+                </a>
+                <!-- YouTube -->
+                <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // --- SCRIPT UNTUK MENU MOBILE ---
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // --- SCRIPT UNTUK SMOOTH SCROLL ---
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                mobileMenu.classList.add('hidden');
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // --- SCRIPT UNTUK THEME TOGGLE ---
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+        const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+        const applyTheme = (theme) => {
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+                themeToggleLightIcon.classList.remove('hidden');
+                themeToggleDarkIcon.classList.add('hidden');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+                themeToggleDarkIcon.classList.remove('hidden');
+                themeToggleLightIcon.classList.add('hidden');
+                localStorage.setItem('theme', 'light');
+            }
+        };
+        const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        applyTheme(currentTheme);
+        themeToggleBtn.addEventListener('click', () => {
+            const newTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+            applyTheme(newTheme);
+        });
+
+        // --- SCRIPT UNTUK ANIMASI SAAT SCROLL ---
+        const animatedElements = document.querySelectorAll('.scroll-animate');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry, index) => {
+                if (entry.isIntersecting) {
+                    // Menambahkan delay yang berbeda untuk setiap elemen agar muncul satu per satu
+                    const delay = entry.target.dataset.delay || index * 100;
+                    entry.target.style.transitionDelay = `${delay}ms`;
+                    entry.target.classList.add('is-visible');
+                }
+            });
+        }, {
+            threshold: 0.1
+        });
+
+        animatedElements.forEach((el, index) => {
+            // Memberi delay dasar pada elemen-elemen yang berurutan
+            if (!el.dataset.delay) {
+                el.dataset.delay = index * 50;
+            }
+            observer.observe(el);
+        });
+    </script>
+
+</body>
+</html>

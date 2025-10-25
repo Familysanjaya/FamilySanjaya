@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linimasa Keluarga</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        .font-lora { font-family: 'Lora', serif; }
+        .timeline-item {
+            opacity: 0;
+            transition: opacity 0.6s ease-out;
+        }
+        .timeline-item.is-visible {
+            opacity: 1;
+        }
+        .timeline-item .date-marker,
+        .timeline-item .content-card {
+            transform: translateY(30px);
+            opacity: 0;
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .timeline-item.is-visible .date-marker {
+            transform: translateY(0);
+            opacity: 1;
+            transition-delay: 0.1s;
+        }
+        .timeline-item.is-visible .content-card {
+            transform: translateY(0);
+            opacity: 1;
+            transition-delay: 0.2s;
+        }
+        .content-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .content-card:hover {
+            transform: scale(1.02);
+        }
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            transform: scale(0.95);
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .modal-open .modal-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+    </style>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark')
+        } else {
+          document.documentElement.classList.remove('dark')
+        }
+    </script>
+</head>
+<body class="bg-[#fdfdfd] text-[#333333] dark:bg-[#262626] dark:text-[#f5f5f5] transition-colors duration-300">
+
+    <!-- Header -->
+    <header class="bg-white/80 dark:bg-gray-800/50 backdrop-blur-lg shadow-md sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="text-2xl font-lora font-bold text-gray-800 dark:text-white">
+                <a href="index.html">Keluarga Bahagia</a>
+            </div>
+            <div class="hidden md:flex items-center space-x-6">
+                <a href="index.html" class="text-gray-600 dark:text-gray-300 hover:text-[#008080] dark:hover:text-white transition-colors">Beranda</a>
+                <a href="galeri.html" class="text-gray-600 dark:text-gray-300 hover:text-[#008080] dark:hover:text-white transition-colors">Galeri</a>
+                <a href="silsilah.html" class="text-gray-600 dark:text-gray-300 hover:text-[#008080] dark:hover:text-white transition-colors">Pohon Keluarga</a>
+                <a href="linimasa.html" class="text-[#008080] dark:text-white font-semibold transition-colors">Linimasa</a>
+                <button id="theme-toggle" class="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
+                    <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                    <svg id="theme-toggle-light-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+                </button>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden text-gray-700 dark:text-gray-300 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </nav>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4">
+             <a href="index.html" class="block py-2 text-gray-600 dark:text-gray-300">Beranda</a>
+             <a href="galeri.html" class="block py-2 text-gray-600 dark:text-gray-300">Galeri</a>
+             <a href="silsilah.html" class="block py-2 text-gray-600 dark:text-gray-300">Pohon Keluarga</a>
+             <a href="linimasa.html" class="block py-2 text-[#008080] dark:text-white font-semibold">Linimasa</a>
+        </div>
+    </header>
+
+    <main>
+        <!-- Bagian Linimasa -->
+        <section id="linimasa" class="py-20 px-6 bg-[#f7f7f7] dark:bg-[#1f1f1f]">
+            <div class="container mx-auto">
+                <h1 class="text-5xl font-lora font-bold text-center text-gray-800 dark:text-white mb-20">Jejak Kenangan Keluarga</h1>
+                
+                <!-- Kontainer untuk item linimasa -->
+                <div id="timeline-container" class="max-w-3xl mx-auto space-y-12">
+                    <!-- Item 1 -->
+                    <div class="timeline-item md:flex items-start space-x-6">
+                        <div class="date-marker flex-shrink-0 flex flex-col items-center md:w-32">
+                            <span class="font-lora text-3xl font-bold text-[#008080] dark:text-[#c89b6c]">1985</span>
+                            <span class="text-gray-500 dark:text-gray-400">10 Juni</span>
+                        </div>
+                        <div data-event-id="pernikahan-1985" class="content-card w-full mt-4 md:mt-0 p-6 bg-white dark:bg-[#333] rounded-lg shadow-lg cursor-pointer dark:shadow-gray-800/20 hover:shadow-xl">
+                            <img src="https://placehold.co/600x400/e0e0e0/333?text=Pernikahan" class="w-full rounded-lg mb-4 pointer-events-none" onerror="this.src='https://placehold.co/600x400/e0e0e0/333?text=Gagal+Muat'">
+                            <h3 class="text-2xl font-lora text-gray-800 dark:text-white mb-2 pointer-events-none">Pernikahan Kakek & Nenek</h3>
+                            <p class="text-gray-600 dark:text-gray-300 pointer-events-none">Awal dari perjalanan keluarga kami, sebuah ikatan suci yang penuh cinta dan harapan di sebuah desa kecil yang permai.</p>
+                        </div>
+                    </div>
+                    <!-- Item 2 -->
+                    <div class="timeline-item md:flex items-start space-x-6">
+                        <div class="date-marker flex-shrink-0 flex flex-col items-center md:w-32">
+                            <span class="font-lora text-3xl font-bold text-[#008080] dark:text-[#c89b6c]">1990</span>
+                            <span class="text-gray-500 dark:text-gray-400">20 Maret</span>
+                        </div>
+                        <div data-event-id="kelahiran-1990" class="content-card w-full mt-4 md:mt-0 p-6 bg-white dark:bg-[#333] rounded-lg shadow-lg cursor-pointer dark:shadow-gray-800/20 hover:shadow-xl">
+                            <img src="https://placehold.co/600x400/e0e0e0/333?text=Kelahiran" class="w-full rounded-lg mb-4 pointer-events-none" onerror="this.src='https://placehold.co/600x400/e0e0e0/333?text=Gagal+Muat'">
+                            <h3 class="text-2xl font-lora text-gray-800 dark:text-white mb-2 pointer-events-none">Kelahiran Ayah</h3>
+                            <p class="text-gray-600 dark:text-gray-300 pointer-events-none">Momen sukacita menyambut kehadiran generasi penerus pertama yang membawa tawa dan harapan baru bagi keluarga.</p>
+                        </div>
+                    </div>
+                    <!-- Item 3 -->
+                    <div class="timeline-item md:flex items-start space-x-6">
+                        <div class="date-marker flex-shrink-0 flex flex-col items-center md:w-32">
+                            <span class="font-lora text-3xl font-bold text-[#008080] dark:text-[#c89b6c]">2015</span>
+                            <span class="text-gray-500 dark:text-gray-400">15 Juli</span>
+                        </div>
+                        <div data-event-id="liburan-2015" class="content-card w-full mt-4 md:mt-0 p-6 bg-white dark:bg-[#333] rounded-lg shadow-lg cursor-pointer dark:shadow-gray-800/20 hover:shadow-xl">
+                            <img src="https://placehold.co/600x400/e0e0e0/333?text=Liburan" class="w-full rounded-lg mb-4 pointer-events-none" onerror="this.src='https://placehold.co/600x400/e0e0e0/333?text=Gagal+Muat'">
+                            <h3 class="text-2xl font-lora text-gray-800 dark:text-white mb-2 pointer-events-none">Liburan Keluarga Pertama</h3>
+                            <p class="text-gray-600 dark:text-gray-300 pointer-events-none">Menciptakan kenangan tak terlupakan di pantai, mempererat ikatan kami di bawah hangatnya mentari.</p>
+                        </div>
+                    </div>
+                     <!-- Item 4 (Contoh) -->
+                    <div class="timeline-item md:flex items-start space-x-6">
+                        <div class="date-marker flex-shrink-0 flex flex-col items-center md:w-32">
+                            <span class="font-lora text-3xl font-bold text-[#008080] dark:text-[#c89b6c]">2017</span>
+                            <span class="text-gray-500 dark:text-gray-400">5 April</span>
+                        </div>
+                        <div data-event-id="liburan-2015" class="content-card w-full mt-4 md:mt-0 p-6 bg-white dark:bg-[#333] rounded-lg shadow-lg cursor-pointer dark:shadow-gray-800/20 hover:shadow-xl">
+                            <img src="https://placehold.co/600x400/e0e0e0/333?text=Pindah+Rumah" class="w-full rounded-lg mb-4 pointer-events-none" onerror="this.src='https://placehold.co/600x400/e0e0e0/333?text=Gagal+Muat'">
+                            <h3 class="text-2xl font-lora text-gray-800 dark:text-white mb-2 pointer-events-none">Pindah ke Rumah Baru</h3>
+                            <p class="text-gray-600 dark:text-gray-300 pointer-events-none">Babak baru dimulai di rumah yang penuh dengan tawa dan cerita baru. Tempat kami tumbuh bersama.</p>
+                        </div>
+                    </div>
+                     <!-- Item 5 (Contoh) -->
+                    <div class="timeline-item md:flex items-start space-x-6">
+                        <div class="date-marker flex-shrink-0 flex flex-col items-center md:w-32">
+                            <span class="font-lora text-3xl font-bold text-[#008080] dark:text-[#c89b6c]">2020</span>
+                            <span class="text-gray-500 dark:text-gray-400">18 Agustus</span>
+                        </div>
+                        <div data-event-id="liburan-2015" class="content-card w-full mt-4 md:mt-0 p-6 bg-white dark:bg-[#333] rounded-lg shadow-lg cursor-pointer dark:shadow-gray-800/20 hover:shadow-xl">
+                            <img src="https://placehold.co/600x400/e0e0e0/333?text=Wisuda" class="w-full rounded-lg mb-4 pointer-events-none" onerror="this.src='https://placehold.co/600x400/e0e0e0/333?text=Gagal+Muat'">
+                            <h3 class="text-2xl font-lora text-gray-800 dark:text-white mb-2 pointer-events-none">Wisuda Kakak</h3>
+                            <p class="text-gray-600 dark:text-gray-300 pointer-events-none">Hari yang membanggakan saat anggota keluarga pertama kami lulus universitas. Perjuangan yang terbayar lunas.</p>
+                        </div>
+                    </div>
+                     <!-- Item 6 (Contoh) -->
+                    <div class="timeline-item md:flex items-start space-x-6">
+                        <div class="date-marker flex-shrink-0 flex flex-col items-center md:w-32">
+                            <span class="font-lora text-3xl font-bold text-[#008080] dark:text-[#c89b6c]">2022</span>
+                            <span class="text-gray-500 dark:text-gray-400">25 Desember</span>
+                        </div>
+                        <div data-event-id="liburan-2015" class="content-card w-full mt-4 md:mt-0 p-6 bg-white dark:bg-[#333] rounded-lg shadow-lg cursor-pointer dark:shadow-gray-800/20 hover:shadow-xl">
+                            <img src="https://placehold.co/600x400/e0e0e0/333?text=Reuni" class="w-full rounded-lg mb-4 pointer-events-none" onerror="this.src='https://placehold.co/600x400/e0e0e0/333?text=Gagal+Muat'">
+                            <h3 class="text-2xl font-lora text-gray-800 dark:text-white mb-2 pointer-events-none">Reuni Keluarga Besar</h3>
+                            <p class="text-gray-600 dark:text-gray-300 pointer-events-none">Semua berkumpul setelah sekian lama. Momen langka yang penuh haru dan kebahagiaan.</p>
+                        </div>
+                    </div>
+                     <!-- Item 7 (Contoh) -->
+                    <div class="timeline-item md:flex items-start space-x-6">
+                        <div class="date-marker flex-shrink-0 flex flex-col items-center md:w-32">
+                            <span class="font-lora text-3xl font-bold text-[#008080] dark:text-[#c89b6c]">2023</span>
+                            <span class="text-gray-500 dark:text-gray-400">1 Januari</span>
+                        </div>
+                        <div data-event-id="liburan-2015" class="content-card w-full mt-4 md:mt-0 p-6 bg-white dark:bg-[#333] rounded-lg shadow-lg cursor-pointer dark:shadow-gray-800/20 hover:shadow-xl">
+                            <img src="https://placehold.co/600x400/e0e0e0/333?text=Tahun+Baru" class="w-full rounded-lg mb-4 pointer-events-none" onerror="this.src='https://placehold.co/600x400/e0e0e0/333?text=Gagal+Muat'">
+                            <h3 class="text-2xl font-lora text-gray-800 dark:text-white mb-2 pointer-events-none">Tahun Baru di Puncak</h3>
+                            <p class="text-gray-600 dark:text-gray-300 pointer-events-none">Menyambut matahari terbit pertama di tahun yang baru dengan harapan dan doa bersama.</p>
+                        </div>
+                    </div>
+                     <!-- Item 8 (Contoh) -->
+                    <div class="timeline-item md:flex items-start space-x-6">
+                        <div class="date-marker flex-shrink-0 flex flex-col items-center md:w-32">
+                            <span class="font-lora text-3xl font-bold text-[#008080] dark:text-[#c89b6c]">2023</span>
+                            <span class="text-gray-500 dark:text-gray-400">10 Februari</span>
+                        </div>
+                        <div data-event-id="liburan-2015" class="content-card w-full mt-4 md:mt-0 p-6 bg-white dark:bg-[#333] rounded-lg shadow-lg cursor-pointer dark:shadow-gray-800/20 hover:shadow-xl">
+                            <img src="https://placehold.co/600x400/e0e0e0/333?text=Anggota+Baru" class="w-full rounded-lg mb-4 pointer-events-none" onerror="this.src='https://placehold.co/600x400/e0e0e0/333?text=Gagal+Muat'">
+                            <h3 class="text-2xl font-lora text-gray-800 dark:text-white mb-2 pointer-events-none">Kelahiran Cucu Pertama</h3>
+                            <p class="text-gray-600 dark:text-gray-300 pointer-events-none">Generasi baru telah tiba! Sukacita yang tak terhingga menyambut anggota keluarga terkecil kami.</p>
+                        </div>
+                    </div>
+                     <!-- Item 9 (Contoh) -->
+                    <div class="timeline-item md:flex items-start space-x-6">
+                        <div class="date-marker flex-shrink-0 flex flex-col items-center md:w-32">
+                            <span class="font-lora text-3xl font-bold text-[#008080] dark:text-[#c89b6c]">2024</span>
+                            <span class="text-gray-500 dark:text-gray-400">17 April</span>
+                        </div>
+                        <div data-event-id="liburan-2015" class="content-card w-full mt-4 md:mt-0 p-6 bg-white dark:bg-[#333] rounded-lg shadow-lg cursor-pointer dark:shadow-gray-800/20 hover:shadow-xl">
+                            <img src="https://placehold.co/600x400/e0e0e0/333?text=Lebaran" class="w-full rounded-lg mb-4 pointer-events-none" onerror="this.src='https://placehold.co/600x400/e0e0e0/333?text=Gagal+Muat'">
+                            <h3 class="text-2xl font-lora text-gray-800 dark:text-white mb-2 pointer-events-none">Idul Fitri Bersama</h3>
+                            <p class="text-gray-600 dark:text-gray-300 pointer-events-none">Momen saling memaafkan dan berbagi kebahagiaan di hari yang fitri. Kebersamaan yang selalu dirindukan.</p>
+                        </div>
+                    </div>
+                     <!-- Item 10 (Contoh) -->
+                    <div class="timeline-item md:flex items-start space-x-6">
+                        <div class="date-marker flex-shrink-0 flex flex-col items-center md:w-32">
+                            <span class="font-lora text-3xl font-bold text-[#008080] dark:text-[#c89b6c]">2024</span>
+                            <span class="text-gray-500 dark:text-gray-400">20 Mei</span>
+                        </div>
+                        <div data-event-id="liburan-2015" class="content-card w-full mt-4 md:mt-0 p-6 bg-white dark:bg-[#333] rounded-lg shadow-lg cursor-pointer dark:shadow-gray-800/20 hover:shadow-xl">
+                            <img src="https://placehold.co/600x400/e0e0e0/333?text=Liburan+Lagi" class="w-full rounded-lg mb-4 pointer-events-none" onerror="this.src='https://placehold.co/600x400/e0e0e0/333?text=Gagal+Muat'">
+                            <h3 class="text-2xl font-lora text-gray-800 dark:text-white mb-2 pointer-events-none">Liburan ke Yogyakarta</h3>
+                            <p class="text-gray-600 dark:text-gray-300 pointer-events-none">Menjelajahi warisan budaya dan kuliner di kota yang istimewa. Kenangan manis lainnya terukir.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- === BAGIAN BARU: Kontainer Paginasi === -->
+                <div id="timeline-pagination" class="flex justify-center items-center space-x-2 mt-16">
+                    <!-- Tombol paginasi akan dibuat oleh JavaScript di sini -->
+                </div>
+                <!-- === AKHIR BAGIAN BARU === -->
+
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal Galeri Linimasa -->
+    <div id="timeline-modal" class="hidden fixed inset-0 z-[100] w-full h-full flex items-center justify-center modal-backdrop">
+        <div class="modal-content bg-white dark:bg-[#333] rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto m-4">
+            <div class="p-6">
+                <div class="flex justify-between items-start">
+                    <h2 id="modal-title" class="text-3xl font-lora text-gray-800 dark:text-white"></h2>
+                    <button id="close-modal" class="text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white text-3xl font-bold">&times;</button>
+                </div>
+                <div id="modal-gallery" class="mt-6 grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <!-- Konten galeri akan diisi oleh JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 dark:bg-gray-900/50 py-6">
+        <div class="container mx-auto px-6 text-center text-gray-300 dark:text-gray-400">
+            <p>&copy; 2024 Keluarga Bahagia. Dibuat dengan cinta dan secangkir kopi.</p>
+        </div>
+    </footer>
+
+    <script>
+        // --- SCRIPT UNTUK MENU MOBILE ---
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // --- SCRIPT UNTUK THEME TOGGLE ---
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+        const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+        const applyTheme = (theme) => {
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+                themeToggleLightIcon.classList.remove('hidden');
+                themeToggleDarkIcon.classList.add('hidden');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+                themeToggleDarkIcon.classList.remove('hidden');
+                themeToggleLightIcon.classList.add('hidden');
+                localStorage.setItem('theme', 'light');
+            }
+        };
+        const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        applyTheme(currentTheme);
+        themeToggleBtn.addEventListener('click', () => {
+            const newTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+            applyTheme(newTheme);
+        });
+        
+        // --- SCRIPT UNTUK ANIMASI LINIMASA SAAT SCROLL ---
+        // Pindahkan definisi ini ke atas agar bisa diakses oleh skrip paginasi
+        const allTimelineItems = document.querySelectorAll('#timeline-container .timeline-item');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    // Opsional: berhenti mengamati setelah terlihat
+                    // observer.unobserve(entry.target); 
+                }
+            });
+        }, {
+            threshold: 0.1
+        });
+        
+        // Hapus perulangan observe di sini, akan ditangani oleh skrip paginasi
+        // allTimelineItems.forEach(item => { ... });
+
+
+        // --- SCRIPT BARU: UNTUK PAGINASI LINIMASA ---
+        const ITEMS_PER_PAGE = 9; // <--- Ubah angka ini ke 9 (atau 3 untuk tes)
+        let currentPage = 1;
+        const paginationContainer = document.getElementById('timeline-pagination');
+        const totalItems = allTimelineItems.length;
+        const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+
+        const showPage = (page) => {
+            currentPage = parseInt(page);
+            const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+            const endIndex = startIndex + ITEMS_PER_PAGE;
+
+            // 1. Sembunyikan semua item dan reset animasi
+            allTimelineItems.forEach(item => {
+                item.classList.add('hidden');
+                item.classList.remove('is-visible'); // Reset animasi
+                observer.unobserve(item); // Berhenti mengamati
+            });
+
+            // 2. Tampilkan hanya item untuk halaman ini dan amati lagi
+            for (let i = startIndex; i < endIndex && i < totalItems; i++) {
+                allTimelineItems[i].classList.remove('hidden');
+                observer.observe(allTimelineItems[i]); // Amati item yang ditampilkan
+            }
+            
+            // 3. Perbarui tombol paginasi
+            updatePaginationButtons();
+
+            // 4. Gulir ke atas bagian linimasa
+            document.getElementById('linimasa').scrollIntoView({ behavior: 'smooth' });
+        };
+
+        const updatePaginationButtons = () => {
+            paginationContainer.innerHTML = ''; // Kosongkan tombol lama
+
+            if (totalPages <= 1) return; // Jangan tampilkan jika hanya 1 halaman
+
+            // Gaya tombol
+            const btnBaseStyle = "px-4 py-2 rounded-lg transition-colors duration-200 text-sm font-medium";
+            const btnIdleStyle = "bg-gray-200 dark:bg-gray-700 hover:bg-[#008080] hover:text-white dark:hover:bg-[#c89b6c] dark:text-gray-300";
+            const btnActiveStyle = "bg-[#008080] dark:bg-[#c89b6c] text-white font-bold";
+            const btnDisabledStyle = "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed";
+
+            // --- Tombol "Sebelumnya" ---
+            const prevBtn = document.createElement('button');
+            prevBtn.innerHTML = '&laquo; Seb';
+            prevBtn.className = `${btnBaseStyle} ${currentPage === 1 ? btnDisabledStyle : btnIdleStyle}`;
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.addEventListener('click', () => {
+                if (currentPage > 1) showPage(currentPage - 1);
+            });
+            paginationContainer.appendChild(prevBtn);
+
+            // --- Tombol Nomor Halaman ---
+            for (let i = 1; i <= totalPages; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.textContent = i;
+                pageBtn.className = `${btnBaseStyle} ${i === currentPage ? btnActiveStyle : btnIdleStyle}`;
+                pageBtn.addEventListener('click', (e) => showPage(e.target.textContent));
+                paginationContainer.appendChild(pageBtn);
+            }
+
+            // --- Tombol "Selanjutnya" ---
+            const nextBtn = document.createElement('button');
+            nextBtn.innerHTML = 'Sel &raquo;';
+            nextBtn.className = `${btnBaseStyle} ${currentPage === totalPages ? btnDisabledStyle : btnIdleStyle}`;
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.addEventListener('click', () => {
+                if (currentPage < totalPages) showPage(currentPage + 1);
+            });
+            paginationContainer.appendChild(nextBtn);
+        };
+
+        // --- Pengaturan Awal Saat Halaman Dimuat ---
+        if (totalPages > 1) {
+            showPage(1); // Tampilkan halaman pertama jika ada lebih dari 1 halaman
+        } else {
+            // Jika tidak ada paginasi (hanya 1 halaman), amati semua item seperti biasa
+             allTimelineItems.forEach(item => {
+                item.classList.remove('hidden'); // Pastikan terlihat
+                observer.observe(item);
+            });
+        }
+        // --- AKHIR SCRIPT PAGINASI ---
+
+
+        // --- SCRIPT UNTUK MODAL GALERI LINIMASA ---
+        const timelineData = {
+            'pernikahan-1985': {
+                title: 'Galeri Pernikahan Kakek & Nenek',
+                items: [
+                    { type: 'image', src: 'https://placehold.co/600x400/e0e0e0/333?text=Foto+Akad' },
+                    { type: 'image', src: 'https://placehold.co/600x400/e0e0e0/333?text=Foto+Resepsi' },
+                    { type: 'video', src: 'https://cdn.pixabay.com/video/2020/02/03/31863-392333853_large.mp4' }
+                ]
+            },
+            'kelahiran-1990': {
+                title: 'Galeri Kelahiran Ayah',
+                items: [
+                    { type: 'image', src: 'https://placehold.co/600x400/e0e0e0/333?text=Foto+Bayi' },
+                ]
+            },
+            'liburan-2015': {
+                title: 'Galeri Liburan Keluarga',
+                items: [
+                    { type: 'image', src: 'https://placehold.co/600x400/e0e0e0/333?text=Pantai+1' },
+                    { type: 'image', src: 'https://placehold.co/600x400/e0e0e0/333?text=Pantai+2' },
+                    { type: 'image', src: 'https://placehold.co/600x400/e0e0e0/333?text=Makan+Malam' },
+                ]
+            }
+            // Anda bisa tambahkan data untuk event-id lainnya di sini
+        };
+
+        const clickableItems = document.querySelectorAll('[data-event-id]');
+        const modal = document.getElementById('timeline-modal');
+        const closeModalBtn = document.getElementById('close-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalGallery = document.getElementById('modal-gallery');
+
+        const openModal = (eventId) => {
+            const eventData = timelineData[eventId];
+            if (!eventData) {
+                 // Jika data tidak ada, tampilkan pesan default
+                modalTitle.textContent = "Galeri Kenangan";
+                modalGallery.innerHTML = `<p class="text-gray-600 dark:text-gray-300 col-span-full text-center">Tidak ada foto atau video untuk kenangan ini.</p>`;
+            } else {
+                modalTitle.textContent = eventData.title;
+                modalGallery.innerHTML = ''; // Kosongkan galeri
+
+                eventData.items.forEach(item => {
+                    const itemEl = document.createElement('div');
+                    itemEl.className = 'rounded-lg overflow-hidden aspect-video bg-gray-200 dark:bg-gray-700'; // Tambah bg placeholder
+                    if (item.type === 'image') {
+                        itemEl.innerHTML = `<img src="${item.src}" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML='<div class=flex items-center justify-center h-full>Gagal memuat gambar</div>'">`;
+                    } else if (item.type === 'video') {
+                        itemEl.innerHTML = `<video src="${item.src}" class="w-full h-full object-cover" controls onerror="this.parentElement.innerHTML='<div class=flex items-center justify-center h-full>Gagal memuat video</div>'"></video>`;
+                    }
+                    modalGallery.appendChild(itemEl);
+                });
+            }
+
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.add('modal-open'), 10); // Efek transisi
+        };
+
+        const closeModal = () => {
+            modal.classList.remove('modal-open');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modalGallery.innerHTML = ''; // Hentikan video saat ditutup
+            }, 300);
+        };
+
+        clickableItems.forEach(item => {
+            item.addEventListener('click', () => {
+                openModal(item.dataset.eventId);
+            });
+        });
+
+        closeModalBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+    </script>
+
+</body>
+</html>

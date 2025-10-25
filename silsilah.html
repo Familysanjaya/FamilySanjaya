@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Silsilah Keluarga</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        .font-lora { font-family: 'Lora', serif; }
+        /* Styling Pohon Keluarga */
+        .family-tree-container {
+            overflow: auto;
+            cursor: grab;
+        }
+        .family-tree-container.grabbing {
+            cursor: grabbing;
+        }
+        .family-tree {
+            transform-origin: top center;
+            transition: transform 0.3s ease;
+            /* Tambahkan warna garis yang konsisten dengan tema */
+            --line-color: #cbd5e1; /* Default light */
+        }
+        html.dark .family-tree {
+             --line-color: #4b5563; /* Dark mode */
+        }
+        .family-tree ul {
+            position: relative; padding-top: 20px; transition: all 0.5s; display: flex; justify-content: center;
+        }
+        .family-tree li {
+            float: left; text-align: center; list-style-type: none; position: relative; padding: 20px 5px 0 5px; transition: all 0.5s;
+        }
+        /* Menggunakan variabel warna CSS */
+        .family-tree li::before, .family-tree li::after {
+            content: ''; position: absolute; top: 0; right: 50%; border-top: 2px solid var(--line-color); width: 50%; height: 20px;
+        }
+        .family-tree li::after {
+            right: auto; left: 50%; border-left: 2px solid var(--line-color);
+        }
+        .family-tree li:only-child::after, .family-tree li:only-child::before { display: none; }
+        .family-tree li:first-child::before, .family-tree li:last-child::after { border: 0 none; }
+        .family-tree li:last-child::before {
+            border-right: 2px solid var(--line-color); border-radius: 0 5px 0 0;
+        }
+        .family-tree li:first-child::after { border-radius: 5px 0 0 0; border-left: 2px solid var(--line-color); /* Pastikan border kiri ada */ }
+        .family-tree ul ul::before {
+            content: ''; position: absolute; top: 0; left: 50%; border-left: 2px solid var(--line-color); width: 0; height: 20px;
+        }
+        .family-tree .member {
+            padding: 10px; text-decoration: none; border-radius: 8px; display: inline-block; transition: all 0.3s; min-width: 120px; cursor: pointer;
+        }
+        /* Styling untuk Pasangan */
+        .family-tree .couple {
+            display: flex; justify-content: center; align-items: center; position: relative;
+        }
+        .family-tree .couple::before {
+            content: ''; position: absolute; top: 50px; /* Sesuaikan jika perlu */ left: calc(50% - 25px); width: 50px; border-top: 2px solid var(--line-color); z-index: -1;
+        }
+        .family-tree .couple .member { margin: 0 10px; }
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
+        }
+        .mini-member {
+             cursor: pointer;
+        }
+         /* Transisi Modal */
+        .modal-content {
+            transform: scale(0.95);
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        #profile-modal.modal-open .modal-content {
+             transform: scale(1);
+             opacity: 1;
+        }
+        /* Efek Animasi */
+        .animate-in {
+            opacity: 0;
+            transform: scale(0.95) translateY(10px);
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+        }
+        .animate-in.is-visible {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+        .member:hover {
+            transform: translateY(-5px) scale(1.05);
+        }
+    </style>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark')
+        } else {
+          document.documentElement.classList.remove('dark')
+        }
+    </script>
+</head>
+<body class="bg-[#fdfdfd] text-[#333333] dark:bg-[#262626] dark:text-[#f5f5f5] transition-colors duration-300 font-inter">
+
+    <!-- Header -->
+    <header class="bg-white/80 dark:bg-gray-800/50 backdrop-blur-lg shadow-md sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="text-2xl font-lora font-bold text-gray-800 dark:text-white">
+                <a href="index.html">Keluarga Bahagia</a>
+            </div>
+            <div class="hidden md:flex items-center space-x-6">
+                <a href="index.html" class="text-gray-600 dark:text-gray-300 hover:text-[#008080] dark:hover:text-white transition-colors">Beranda</a>
+                <a href="galeri.html" class="text-gray-600 dark:text-gray-300 hover:text-[#008080] dark:hover:text-white transition-colors">Galeri</a>
+                <a href="silsilah.html" class="text-[#008080] dark:text-white font-semibold transition-colors">Pohon Keluarga</a>
+                <a href="linimasa.html" class="text-gray-600 dark:text-gray-300 hover:text-[#008080] dark:hover:text-white transition-colors">Linimasa</a>
+                <button id="theme-toggle" class="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
+                    <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                    <svg id="theme-toggle-light-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+                </button>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden text-gray-700 dark:text-gray-300 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </nav>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4">
+             <a href="index.html" class="block py-2 text-gray-600 dark:text-gray-300">Beranda</a>
+             <a href="galeri.html" class="block py-2 text-gray-600 dark:text-gray-300">Galeri</a>
+             <a href="silsilah.html" class="block py-2 text-[#008080] dark:text-white font-semibold">Pohon Keluarga</a>
+             <a href="linimasa.html" class="block py-2 text-gray-600 dark:text-gray-300">Linimasa</a>
+        </div>
+    </header>
+
+    <main>
+        <!-- Bagian Pohon Keluarga -->
+        <section id="pohon-keluarga" class="py-20 px-6 bg-[#f7f7f7] dark:bg-[#1f1f1f] min-h-screen">
+            <div class="container mx-auto text-center">
+                <h1 class="text-5xl font-lora font-bold text-gray-800 dark:text-white mb-16 animate-in">Silsilah Keluarga Kami</h1>
+                <div class="family-tree-container relative w-full h-[70vh] border border-gray-300 dark:border-gray-700 rounded-lg">
+                    
+                    <!-- === STRUKTUR POHON DENGAN GAMBAR PLACEHOLDER === -->
+                    <div class="family-tree whitespace-nowrap p-8 text-gray-500 dark:text-gray-400" style="min-width: 600vw;">
+                        <ul>
+                            <li class="animate-in">
+                                <div class="couple">
+                                    <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="kakek">
+                                        <img src="https://placehold.co/80x80/008080/fff?text=Abah+Jaya" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                        <strong class="text-sm">Abah Jaya</strong>
+                                    </div>
+                                    <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="nenek">
+                                        <img src="https://placehold.co/80x80/008080/fff?text=Emak" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                        <strong class="text-sm">Emak</strong>
+                                    </div>
+                                </div>
+                                <ul>
+                                    <li class="animate-in">
+                                        <!-- Anak Ke-1: Emi & Suami -->
+                                        <div class="couple">
+                                            <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="anak1">
+                                                <img src="https://placehold.co/80x80/008080/fff?text=Emi" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                <strong class="text-sm">Emi</strong>
+                                            </div>
+                                            <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="suami_emi">
+                                                <img src="https://placehold.co/80x80/008080/fff?text=Suami+Emi" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                <strong class="text-sm">Suami Emi</strong>
+                                            </div>
+                                        </div>
+                                        <!-- Anak-anak Emi -->
+                                        <ul>
+                                            <li class="animate-in">
+                                                <div class="couple">
+                                                    <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="euis">
+                                                        <img src="https://placehold.co/80x80/008080/fff?text=Euis" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                        <strong class="text-sm">Euis</strong>
+                                                    </div>
+                                                    <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="sodikin">
+                                                        <img src="https://placehold.co/80x80/008080/fff?text=Sodikin" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                        <strong class="text-sm">Sodikin</strong>
+                                                    </div>
+                                                </div>
+                                                <!-- Anak-anak Euis & Sodikin -->
+                                                <ul>
+                                                    <li class="animate-in">
+                                                        <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="nabilah">
+                                                            <img src="https://placehold.co/80x80/008080/fff?text=Nabilah" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                            <strong class="text-sm">Nabilah Ayu Pramesti</strong>
+                                                        </div>
+                                                    </li>
+                                                    <li class="animate-in">
+                                                        <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="najril">
+                                                            <img src="https://placehold.co/80x80/008080/fff?text=Najril" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                            <strong class="text-sm">Najril Sidqi</strong>
+                                                        </div>
+                                                    </li>
+                                                    <li class="animate-in">
+                                                        <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="najwan">
+                                                            <img src="https://placehold.co/80x80/008080/fff?text=Najwan" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                            <strong class="text-sm">Najwan</strong>
+                                                        </div>
+                                                    </li>
+                                                </ul>
+                                            </li>
+                                            <li class="animate-in">
+                                                <div class="couple">
+                                                    <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="asep">
+                                                        <img src="https://placehold.co/80x80/008080/fff?text=Asep" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                        <strong class="text-sm">Asep Saepullah</strong>
+                                                    </div>
+                                                    <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="inka">
+                                                        <img src="https://placehold.co/80x80/008080/fff?text=Inka" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                        <strong class="text-sm">Inka</strong>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li class="animate-in">
+                                                <div class="couple">
+                                                    <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="irfan">
+                                                        <img src="https://placehold.co/80x80/008080/fff?text=Irfan" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                        <strong class="text-sm">Irfan</strong>
+                                                    </div>
+                                                    <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="istri_irfan">
+                                                        <img src="https://placehold.co/80x80/008080/fff?text=Istri+Irfan" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                        <strong class="text-sm">Istri Irfan</strong>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li class="animate-in">
+                                                <div class="couple">
+                                                    <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="fathan">
+                                                        <img src="https://placehold.co/80x80/008080/fff?text=Fathan" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                        <strong class="text-sm">Fathan</strong>
+                                                    </div>
+                                                    <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="istri_fathan">
+                                                        <img src="https://placehold.co/80x80/008080/fff?text=Istri+Fathan" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                        <strong class="text-sm">Istri Fathan</strong>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li class="animate-in">
+                                                <div class="couple">
+                                                    <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="akew">
+                                                        <img src="https://placehold.co/80x80/008080/fff?text=Akew" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                        <strong class="text-sm">Akew</strong>
+                                                    </div>
+                                                    <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="istri_akew">
+                                                        <img src="https://placehold.co/80x80/008080/fff?text=Istri+Akew" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                        <strong class="text-sm">Istri Akew</strong>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li class="animate-in">
+                                                <div class="couple">
+                                                    <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="ucu">
+                                                        <img src="https://placehold.co/80x80/008080/fff?text=Ucu" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                        <strong class="text-sm">Ucu</strong>
+                                                    </div>
+                                                    <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="istri_ucu">
+                                                        <img src="https://placehold.co/80x80/008080/fff?text=Istri+Ucu" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                        <strong class="text-sm">Istri Ucu</strong>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li class="animate-in">
+                                                <div class="couple">
+                                                    <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="neng">
+                                                        <img src="https://placehold.co/80x80/008080/fff?text=Neng" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                        <strong class="text-sm">Neng Khumairoh</strong>
+                                                    </div>
+                                                    <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="tyo">
+                                                        <img src="https://placehold.co/80x80/008080/fff?text=Tyo" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                        <strong class="text-sm">Tyo</strong>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li class="animate-in">
+                                                <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="enji">
+                                                    <img src="https://placehold.co/80x80/008080/fff?text=Enji" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                    <strong class="text-sm">Enji</strong>
+                                                </div>
+                                            </li>
+                                            <li class="animate-in">
+                                                <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="nasrullah">
+                                                    <img src="https://placehold.co/80x80/008080/fff?text=Nasrullah" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                    <strong class="text-sm">Nasrullah</strong>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="animate-in">
+                                        <!-- Anak Ke-2: Bainah -->
+                                        <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="anak2">
+                                            <img src="https://placehold.co/80x80/008080/fff?text=Bainah" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                            <strong class="text-sm">Bainah</strong>
+                                        </div>
+                                        <!-- Anak-anak Bainah -->
+                                        <ul>
+                                            <li class="animate-in">
+                                                <div class="couple">
+                                                    <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="hasan">
+                                                        <img src="https://placehold.co/80x80/008080/fff?text=Hasan" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                        <strong class="text-sm">Hasan</strong>
+                                                    </div>
+                                                    <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="mamah_ayang">
+                                                        <img src="https://placehold.co/80x80/008080/fff?text=Mamah+Ayang" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                        <strong class="text-sm">Mamah Ayang</strong>
+                                                    </div>
+                                                </div>
+                                                <!-- Anak-anak Hasan & Mamah Ayang -->
+                                                <ul>
+                                                     <li class="animate-in">
+                                                        <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="riska">
+                                                            <img src="https://placehold.co/80x80/008080/fff?text=Riska" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                            <strong class="text-sm">Riska Hamidah</strong>
+                                                        </div>
+                                                    </li>
+                                                    <li class="animate-in">
+                                                        <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="aya">
+                                                            <img src="https://placehold.co/80x80/008080/fff?text=Aya" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                            <strong class="text-sm">Aya</strong>
+                                                        </div>
+                                                    </li>
+                                                </ul>
+                                            </li>
+                                            <li class="animate-in">
+                                                <div class="couple">
+                                                    <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="maman">
+                                                        <img src="https://placehold.co/80x80/008080/fff?text=Maman" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                        <strong class="text-sm">Maman Abdurahman</strong>
+                                                    </div>
+                                                    <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="mamah_gibran">
+                                                        <img src="https://placehold.co/80x80/008080/fff?text=Mamah+Gibran" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                        <strong class="text-sm">Mamah Gibran</strong>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li class="animate-in">
+                                                <div class="couple">
+                                                    <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="fitri">
+                                                        <img src="https://placehold.co/80x80/008080/fff?text=Fitri" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                        <strong class="text-sm">Fitri</strong>
+                                                    </div>
+                                                    <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="aep">
+                                                        <img src="https://placehold.co/80x80/008080/fff?text=Aep" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                        <strong class="text-sm">Aep</strong>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li class="animate-in">
+                                                <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="faisal">
+                                                    <img src="https://placehold.co/80x80/008080/fff?text=Faisal" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                    <strong class="text-sm">Faisal</strong>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="animate-in">
+                                        <!-- Anak Ke-3: Maroh -->
+                                        <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="anak3">
+                                            <img src="https://placehold.co/80x80/008080/fff?text=Maroh" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                            <strong class="text-sm">Maroh</strong>
+                                        </div>
+                                        <!-- Anak-anak Maroh -->
+                                        <ul>
+                                            <li class="animate-in">
+                                                <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="yasir">
+                                                    <img src="https://placehold.co/80x80/008080/fff?text=Yasir" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                    <strong class="text-sm">Yasir Marwan</strong>
+                                                </div>
+                                            </li>
+                                            <li class="animate-in">
+                                                <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="fahmi">
+                                                    <img src="https://placehold.co/80x80/008080/fff?text=Fahmi" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                    <strong class="text-sm">Fahmi Rahman</strong>
+                                                </div>
+                                            </li>
+                                            <li class="animate-in">
+                                                <div class="couple">
+                                                    <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="syifa">
+                                                        <img src="https://placehold.co/80x80/008080/fff?text=Syifa" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                        <strong class="text-sm">Syifa Mawaddah</strong>
+                                                    </div>
+                                                    <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="saipul">
+                                                        <img src="https://placehold.co/80x80/008080/fff?text=Saipul" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                        <strong class="text-sm">Saipul Anwar</strong>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li class="animate-in">
+                                                <div class="couple">
+                                                    <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="sitta">
+                                                        <img src="https://placehold.co/80x80/008080/fff?text=Sitta" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                        <strong class="text-sm">Sitta Mawaddah</strong>
+                                                    </div>
+                                                    <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="fahrurozi">
+                                                        <img src="https://placehold.co/80x80/008080/fff?text=Fahrurozi" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                        <strong class="text-sm">Muhammad Fahrurozi</strong>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li class="animate-in">
+                                                <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="satrio">
+                                                    <img src="https://placehold.co/80x80/008080/fff?text=Satrio" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                    <strong class="text-sm">Muhammad Satrio Dewantoro</strong>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="animate-in">
+                                        <!-- Anak Ke-4: Bapak Uwa -->
+                                        <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="anak4">
+                                            <img src="https://placehold.co/80x80/008080/fff?text=Bapak+Uwa" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                            <strong class="text-sm">Bapak Uwa</strong>
+                                        </div>
+                                        <!-- Anak-anak Bapak Uwa -->
+                                        <ul>
+                                            <li class="animate-in">
+                                                <div class="couple">
+                                                    <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="rifky">
+                                                        <img src="https://placehold.co/80x80/008080/fff?text=Rifky" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                        <strong class="text-sm">Rifky Abdul Aziz</strong>
+                                                    </div>
+                                                    <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="istri_rifky">
+                                                        <img src="https://placehold.co/80x80/008080/fff?text=Istri+Rifky" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                        <strong class="text-sm">Istri Rifky</strong>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li class="animate-in">
+                                                <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="sonny">
+                                                    <img src="https://placehold.co/80x80/008080/fff?text=Sonny" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                    <strong class="text-sm">Sonny</strong>
+                                                </div>
+                                            </li>
+                                            <li class="animate-in">
+                                                <div class="couple">
+                                                    <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="ratih">
+                                                        <img src="https://placehold.co/80x80/008080/fff?text=Ratih" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                        <strong class="text-sm">Ratih</strong>
+                                                    </div>
+                                                    <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="suami_ratih">
+                                                        <img src="https://placehold.co/80x80/008080/fff?text=Suami+Ratih" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                        <strong class="text-sm">Suami Ratih</strong>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li class="animate-in">
+                                                <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="sehan">
+                                                    <img src="https://placehold.co/80x80/008080/fff?text=Sehan" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                    <strong class="text-sm">Sehan</strong>
+                                                </div>
+                                            </li>
+                                            <li class="animate-in">
+                                                <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="hilman">
+                                                    <img src="https://placehold.co/80x80/008080/fff?text=Hilman" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                    <strong class="text-sm">Hilman</strong>
+                                                </div>
+                                            </li>
+                                            <li class="animate-in">
+                                                <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="berlin">
+                                                    <img src="https://placehold.co/80x80/008080/fff?text=Berlin" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                    <strong class="text-sm">Berlin</strong>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="animate-in">
+                                        <!-- Anak Ke-5: Nurlelah -->
+                                        <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="anak5">
+                                            <img src="https://placehold.co/80x80/008080/fff?text=Nurlelah" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                            <strong class="text-sm">Nurlelah</strong>
+                                        </div>
+                                        <!-- Anak-anak Nurlelah -->
+                                        <ul>
+                                            <li class="animate-in">
+                                                <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="hilmi">
+                                                    <img src="https://placehold.co/80x80/008080/fff?text=Hilmi" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                    <strong class="text-sm">Hilmi Wahdi</strong>
+                                                </div>
+                                            </li>
+                                            <li class="animate-in">
+                                                <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="nayla">
+                                                    <img src="https://placehold.co/80x80/008080/fff?text=Nayla" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                    <strong class="text-sm">Nayla</strong>
+                                                </div>
+                                            </li>
+                                            <li class="animate-in">
+                                                <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="ayu">
+                                                    <img src="https://placehold.co/80x80/008080/fff?text=Ayu" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                    <strong class="text-sm">Ayu</strong>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="animate-in">
+                                        <!-- Anak Ke-6: Haulah & Rusdi -->
+                                        <div class="couple">
+                                            <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="anak6">
+                                                <img src="https://placehold.co/80x80/008080/fff?text=Haulah" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                <strong class="text-sm">Haulah</strong>
+                                            </div>
+                                            <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="rusdi">
+                                                <img src="https://placehold.co/80x80/008080/fff?text=Rusdi" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                <strong class="text-sm">Rusdi</strong>
+                                            </div>
+                                        </div>
+                                        <!-- Anak-anak Haulah & Rusdi -->
+                                        <ul>
+                                            <li class="animate-in">
+                                                <div class="couple">
+                                                    <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="lulu">
+                                                        <img src="https://placehold.co/80x80/008080/fff?text=Lulu" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                        <strong class="text-sm">Lulu Afiah</strong>
+                                                    </div>
+                                                    <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="rizal">
+                                                        <img src="https://placehold.co/80x80/008080/fff?text=Rizal" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                        <strong class="text-sm">Rizal</strong>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li class="animate-in">
+                                                <div class="member border-2 border-gray-300 dark:border-[#444] bg-white dark:bg-[#333] text-gray-800 dark:text-white hover:bg-[#008080] dark:hover:bg-[#c89b6c] hover:text-white dark:hover:text-black" data-member="ameyda">
+                                                    <img src="https://placehold.co/80x80/008080/fff?text=Ameyda" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover" onerror="this.src='https://placehold.co/80x80/e0e0e0/333?text=Gagal+Muat'">
+                                                    <strong class="text-sm">Ameyda Kamilah</strong>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                    <!-- === AKHIR STRUKTUR POHON DIPERBAIKI === -->
+
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <!-- Modal Profil -->
+    <div id="profile-modal" class="hidden fixed inset-0 z-[100] w-full h-full flex items-center justify-center modal-backdrop">
+        <div class="modal-content bg-white dark:bg-[#333] rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto m-4">
+            <div class="p-6">
+                <div class="flex justify-between items-start">
+                    <h2 id="modal-name" class="text-3xl font-lora text-gray-800 dark:text-white"></h2>
+                    <button id="close-modal" class="text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white text-3xl font-bold">&times;</button>
+                </div>
+                <div class="mt-4 md:flex md:space-x-6">
+                    <img id="modal-pic" src="" alt="Foto Profil" class="w-32 h-32 rounded-full object-cover mx-auto md:mx-0 flex-shrink-0">
+                    <div class="flex-grow">
+                        <p id="modal-desc" class="text-gray-600 dark:text-gray-300 mt-4 md:mt-0"></p>
+                        <div id="modal-address-container" class="mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">
+                            <h4 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Alamat</h4>
+                            <div class="flex items-center space-x-2">
+                                <a id="modal-maps-link" href="#" target="_blank" class="text-gray-500 hover:text-[#008080] dark:hover:text-[#c89b6c]">
+                                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                                </a>
+                                <p id="modal-address" class="text-gray-600 dark:text-gray-300"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="modal-silsilah-container" class="mt-6">
+                    <!-- Silsilah mini akan diisi oleh JavaScript -->
+                </div>
+                <div class="mt-6">
+                    <h3 class="text-xl font-lora text-gray-800 dark:text-white border-b border-gray-200 dark:border-gray-600 pb-2 mb-4">Galeri Kenangan</h3>
+                    <div id="modal-gallery" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <!-- Galeri akan diisi oleh JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Zoom Controls -->
+    <div class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2">
+        <button id="zoom-in" class="w-12 h-12 bg-gray-800 text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:bg-gray-700 transition dark:bg-gray-200 dark:text-gray-800 dark:hover:bg-gray-300">+</button>
+        <button id="zoom-out" class="w-12 h-12 bg-gray-800 text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:bg-gray-700 transition dark:bg-gray-200 dark:text-gray-800 dark:hover:bg-gray-300">-</button>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 dark:bg-gray-900/50 py-6">
+        <div class="container mx-auto px-6 text-center text-gray-300 dark:text-gray-400">
+            <p>&copy; 2024 Keluarga Bahagia. Dibuat dengan cinta dan secangkir kopi.</p>
+        </div>
+    </footer>
+
+    <script>
+        // --- SCRIPT UNTUK MENU MOBILE ---
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // --- SCRIPT UNTUK THEME TOGGLE ---
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+        const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+        const applyTheme = (theme) => {
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+                themeToggleLightIcon.classList.remove('hidden');
+                themeToggleDarkIcon.classList.add('hidden');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+                themeToggleDarkIcon.classList.remove('hidden');
+                themeToggleLightIcon.classList.add('hidden');
+                localStorage.setItem('theme', 'light');
+            }
+        };
+        const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        applyTheme(currentTheme);
+        themeToggleBtn.addEventListener('click', () => {
+            const newTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+            applyTheme(newTheme);
+        });
+
+        // --- SCRIPT UNTUK MODAL PROFIL SILSILAH ---
+        const familyData = {
+            kakek: { name: 'Abah Jaya', pic: 'https://placehold.co/200x200/008080/fff?text=Abah+Jaya', description: 'Patriark keluarga kami...', spouse: 'nenek', children: ['anak1', 'anak2', 'anak3', 'anak4', 'anak5', 'anak6'], address: 'Jl. Kenangan No. 1, Jakarta', mapsLink: '#' },
+            nenek: { name: 'Emak', pic: 'https://placehold.co/200x200/008080/fff?text=Emak', description: 'Sosok ibu bagi semua...', spouse: 'kakek', children: ['anak1', 'anak2', 'anak3', 'anak4', 'anak5', 'anak6'], address: 'Jl. Kenangan No. 1, Jakarta', mapsLink: '#' },
+            
+            // Anak 1: Emi & Suami
+            anak1: { name: 'Emi', pic: 'https://placehold.co/200x200/008080/fff?text=Emi', description: 'Anak pertama dari Abah Jaya dan Emak.', parents: ['kakek', 'nenek'], spouse: 'suami_emi', children: ['euis', 'asep', 'irfan', 'fathan', 'akew', 'ucu', 'neng', 'enji', 'nasrullah'], address: 'Jl. Cendana No. 10, Jakarta', mapsLink: '#' },
+            suami_emi: { name: 'Suami Emi', pic: 'https://placehold.co/200x200/008080/fff?text=Suami+Emi', description: 'Suami dari Emi.', spouse: 'anak1', parents: [], children: ['euis', 'asep', 'irfan', 'fathan', 'akew', 'ucu', 'neng', 'enji', 'nasrullah'], address: 'Jl. Cendana No. 10, Jakarta', mapsLink: '#' },
+            
+                // Cucu dari Emi
+                euis: { name: 'Euis', pic: 'https://placehold.co/200x200/008080/fff?text=Euis', description: 'Anak dari Emi.', parents: ['anak1', 'suami_emi'], spouse: 'sodikin', children: ['nabilah', 'najril', 'najwan'], address: 'Jl. Cucu No. 1', mapsLink: '#' },
+                sodikin: { name: 'Sodikin', pic: 'https://placehold.co/200x200/008080/fff?text=Sodikin', description: 'Suami dari Euis.', spouse: 'euis', parents: [], children: ['nabilah', 'najril', 'najwan'], address: 'Jl. Cucu No. 1', mapsLink: '#' },
+                
+                    // Cicit dari Euis
+                    nabilah: { name: 'Nabilah Ayu Pramesti', pic: 'https://placehold.co/200x200/008080/fff?text=Nabilah', description: 'Anak dari Euis dan Sodikin.', parents: ['euis', 'sodikin'], children: [], address: 'Jl. Cicit 1', mapsLink: '#' },
+                    najril: { name: 'Najril Sidqi', pic: 'https://placehold.co/200x200/008080/fff?text=Najril', description: 'Anak dari Euis dan Sodikin.', parents: ['euis', 'sodikin'], children: [], address: 'Jl. Cicit 2', mapsLink: '#' },
+                    najwan: { name: 'Najwan', pic: 'https://placehold.co/200x200/008080/fff?text=Najwan', description: 'Anak dari Euis dan Sodikin.', parents: ['euis', 'sodikin'], children: [], address: 'Jl. Cicit 3', mapsLink: '#' },
+
+                asep: { name: 'Asep Saepullah', pic: 'https://placehold.co/200x200/008080/fff?text=Asep', description: 'Anak dari Emi.', parents: ['anak1', 'suami_emi'], spouse: 'inka', children: [], address: 'Jl. Cucu No. 2', mapsLink: '#' },
+                inka: { name: 'Inka', pic: 'https://placehold.co/200x200/008080/fff?text=Inka', description: 'Istri dari Asep Saepullah.', spouse: 'asep', parents: [], children: [], address: 'Jl. Cucu No. 2', mapsLink: '#' },
+                
+                irfan: { name: 'Irfan', pic: 'https://placehold.co/200x200/008080/fff?text=Irfan', description: 'Anak dari Emi.', parents: ['anak1', 'suami_emi'], spouse: 'istri_irfan', children: [], address: 'Jl. Cucu No. 3', mapsLink: '#' },
+                istri_irfan: { name: 'Istri Irfan', pic: 'https://placehold.co/200x200/008080/fff?text=Istri+Irfan', description: 'Istri dari Irfan.', spouse: 'irfan', parents: [], children: [], address: 'Jl. Cucu No. 3', mapsLink: '#' },
+
+                fathan: { name: 'Fathan', pic: 'https://placehold.co/200x200/008080/fff?text=Fathan', description: 'Anak dari Emi.', parents: ['anak1', 'suami_emi'], spouse: 'istri_fathan', children: [], address: 'Jl. Cucu No. 4', mapsLink: '#' },
+                istri_fathan: { name: 'Istri Fathan', pic: 'https://placehold.co/200x200/008080/fff?text=Istri+Fathan', description: 'Istri dari Fathan.', spouse: 'fathan', parents: [], children: [], address: 'Jl. Cucu No. 4', mapsLink: '#' },
+
+                akew: { name: 'Akew', pic: 'https://placehold.co/200x200/008080/fff?text=Akew', description: 'Anak dari Emi.', parents: ['anak1', 'suami_emi'], spouse: 'istri_akew', children: [], address: 'Jl. Cucu No. 5', mapsLink: '#' },
+                istri_akew: { name: 'Istri Akew', pic: 'https://placehold.co/200x200/008080/fff?text=Istri+Akew', description: 'Istri dari Akew.', spouse: 'akew', parents: [], children: [], address: 'Jl. Cucu No. 5', mapsLink: '#' },
+
+                ucu: { name: 'Ucu', pic: 'https://placehold.co/200x200/008080/fff?text=Ucu', description: 'Anak dari Emi.', parents: ['anak1', 'suami_emi'], spouse: 'istri_ucu', children: [], address: 'Jl. Cucu No. 6', mapsLink: '#' },
+                istri_ucu: { name: 'Istri Ucu', pic: 'https://placehold.co/200x200/008080/fff?text=Istri+Ucu', description: 'Istri dari Ucu.', spouse: 'ucu', parents: [], children: [], address: 'Jl. Cucu No. 6', mapsLink: '#' },
+
+                neng: { name: 'Neng Khumairoh', pic: 'https://placehold.co/200x200/008080/fff?text=Neng', description: 'Anak dari Emi.', parents: ['anak1', 'suami_emi'], spouse: 'tyo', children: [], address: 'Jl. Cucu No. 7', mapsLink: '#' },
+                tyo: { name: 'Tyo', pic: 'https://placehold.co/200x200/008080/fff?text=Tyo', description: 'Suami dari Neng Khumairoh.', spouse: 'neng', parents: [], children: [], address: 'Jl. Cucu No. 7', mapsLink: '#' },
+                
+                enji: { name: 'Enji', pic: 'https://placehold.co/200x200/008080/fff?text=Enji', description: 'Anak dari Emi.', parents: ['anak1', 'suami_emi'], children: [], address: 'Jl. Cucu No. 8', mapsLink: '#' },
+                nasrullah: { name: 'Nasrullah', pic: 'https://placehold.co/200x200/008080/fff?text=Nasrullah', description: 'Anak dari Emi.', parents: ['anak1', 'suami_emi'], children: [], address: 'Jl. Cucu No. 9', mapsLink: '#' },
+
+
+            // Anak 2: Bainah
+            anak2: { name: 'Bainah', pic: 'https://placehold.co/200x200/008080/fff?text=Bainah', description: 'Anak kedua dari Abah Jaya dan Emak.', parents: ['kakek', 'nenek'], children: ['hasan', 'maman', 'fitri', 'faisal'], address: 'Jl. Merdeka No. 5, Bandung', mapsLink: '#' },
+            
+                // Cucu dari Bainah
+                hasan: { name: 'Hasan', pic: 'https://placehold.co/200x200/008080/fff?text=Hasan', description: 'Anak dari Bainah.', parents: ['anak2'], spouse: 'mamah_ayang', children: ['riska', 'aya'], address: 'Jl. Cucu B1', mapsLink: '#' },
+                mamah_ayang: { name: 'Mamah Ayang', pic: 'https://placehold.co/200x200/008080/fff?text=Mamah+Ayang', description: 'Istri dari Hasan.', spouse: 'hasan', parents: [], children: ['riska', 'aya'], address: 'Jl. Cucu B1', mapsLink: '#' },
+                
+                    // Cicit dari Hasan
+                    riska: { name: 'Riska Hamidah', pic: 'https://placehold.co/200x200/008080/fff?text=Riska', description: 'Anak dari Hasan dan Mamah Ayang.', parents: ['hasan', 'mamah_ayang'], children: [], address: 'Jl. Cicit B1', mapsLink: '#' },
+                    aya: { name: 'Aya', pic: 'https://placehold.co/200x200/008080/fff?text=Aya', description: 'Anak dari Hasan dan Mamah Ayang.', parents: ['hasan', 'mamah_ayang'], children: [], address: 'Jl. Cicit B2', mapsLink: '#' },
+
+                maman: { name: 'Maman Abdurahman', pic: 'https://placehold.co/200x200/008080/fff?text=Maman', description: 'Anak dari Bainah.', parents: ['anak2'], spouse: 'mamah_gibran', children: [], address: 'Jl. Cucu B2', mapsLink: '#' },
+                mamah_gibran: { name: 'Mamah Gibran', pic: 'https://placehold.co/200x200/008080/fff?text=Mamah+Gibran', description: 'Istri dari Maman Abdurahman.', spouse: 'maman', parents: [], children: [], address: 'Jl. Cucu B2', mapsLink: '#' },
+
+                fitri: { name: 'Fitri', pic: 'https://placehold.co/200x200/008080/fff?text=Fitri', description: 'Anak dari Bainah.', parents: ['anak2'], spouse: 'aep', children: [], address: 'Jl. Cucu B3', mapsLink: '#' },
+                aep: { name: 'Aep', pic: 'https://placehold.co/200x200/008080/fff?text=Aep', description: 'Suami dari Fitri.', spouse: 'fitri', parents: [], children: [], address: 'Jl. Cucu B3', mapsLink: '#' },
+                
+                faisal: { name: 'Faisal', pic: 'https://placehold.co/200x200/008080/fff?text=Faisal', description: 'Anak dari Bainah.', parents: ['anak2'], children: [], address: 'Jl. Cucu B4', mapsLink: '#' },
+
+            // Anak 3: Maroh
+            anak3: { name: 'Maroh', pic: 'https://placehold.co/200x200/008080/fff?text=Maroh', description: 'Anak ketiga dari Abah Jaya dan Emak.', parents: ['kakek', 'nenek'], children: ['yasir', 'fahmi', 'syifa', 'sitta', 'satrio'], address: 'Jl. Kenangan No. 1, Jakarta', mapsLink: '#' },
+            
+                // Cucu dari Maroh
+                yasir: { name: 'Yasir Marwan', pic: 'https://placehold.co/200x200/008080/fff?text=Yasir', description: 'Anak dari Maroh.', parents: ['anak3'], children: [], address: 'Jl. Cucu C1', mapsLink: '#' },
+                fahmi: { name: 'Fahmi Rahman', pic: 'https://placehold.co/200x200/008080/fff?text=Fahmi', description: 'Anak dari Maroh.', parents: ['anak3'], children: [], address: 'Jl. Cucu C2', mapsLink: '#' },
+                
+                syifa: { name: 'Syifa Mawaddah', pic: 'https://placehold.co/200x200/008080/fff?text=Syifa', description: 'Anak dari Maroh.', parents: ['anak3'], spouse: 'saipul', children: [], address: 'Jl. Cucu C3', mapsLink: '#' },
+                saipul: { name: 'Saipul Anwar', pic: 'https://placehold.co/200x200/008080/fff?text=Saipul', description: 'Suami dari Syifa Mawaddah.', spouse: 'syifa', parents: [], children: [], address: 'Jl. Cucu C3', mapsLink: '#' },
+                
+                sitta: { name: 'Sitta Mawaddah', pic: 'https://placehold.co/200x200/008080/fff?text=Sitta', description: 'Anak dari Maroh.', parents: ['anak3'], spouse: 'fahrurozi', children: [], address: 'Jl. Cucu C4', mapsLink: '#' },
+                fahrurozi: { name: 'Muhammad Fahrurozi', pic: 'https://placehold.co/200x200/008080/fff?text=Fahrurozi', description: 'Suami dari Sitta Mawaddah.', spouse: 'sitta', parents: [], children: [], address: 'Jl. Cucu C4', mapsLink: '#' },
+
+                satrio: { name: 'Muhammad Satrio Dewantoro', pic: 'https://placehold.co/200x200/008080/fff?text=Satrio', description: 'Anak dari Maroh.', parents: ['anak3'], children: [], address: 'Jl. Cucu C5', mapsLink: '#' },
+
+            // Anak 4: Bapak Uwa
+            anak4: { name: 'Bapak Uwa', pic: 'https://placehold.co/200x200/008080/fff?text=Bapak+Uwa', description: 'Anak keempat dari Abah Jaya dan Emak.', parents: ['kakek', 'nenek'], children: ['rifky', 'sonny', 'ratih', 'sehan', 'hilman', 'berlin'], address: 'Jl. Kenangan No. 1, Jakarta', mapsLink: '#' },
+
+                // Cucu dari Bapak Uwa
+                rifky: { name: 'Rifky Abdul Aziz', pic: 'https://placehold.co/200x200/008080/fff?text=Rifky', description: 'Anak dari Bapak Uwa.', parents: ['anak4'], spouse: 'istri_rifky', children: [], address: 'Jl. Cucu D1', mapsLink: '#' },
+                istri_rifky: { name: 'Istri Rifky', pic: 'https://placehold.co/200x200/008080/fff?text=Istri+Rifky', description: 'Istri dari Rifky.', spouse: 'rifky', parents: [], children: [], address: 'Jl. Cucu D1', mapsLink: '#' },
+                
+                sonny: { name: 'Sonny', pic: 'https://placehold.co/200x200/008080/fff?text=Sonny', description: 'Anak dari Bapak Uwa.', parents: ['anak4'], children: [], address: 'Jl. Cucu D2', mapsLink: '#' },
+                
+                ratih: { name: 'Ratih', pic: 'https://placehold.co/200x200/008080/fff?text=Ratih', description: 'Anak dari Bapak Uwa.', parents: ['anak4'], spouse: 'suami_ratih', children: [], address: 'Jl. Cucu D3', mapsLink: '#' },
+                suami_ratih: { name: 'Suami Ratih', pic: 'https://placehold.co/200x200/008080/fff?text=Suami+Ratih', description: 'Suami dari Ratih.', spouse: 'ratih', parents: [], children: [], address: 'Jl. Cucu D3', mapsLink: '#' },
+
+                sehan: { name: 'Sehan', pic: 'https://placehold.co/200x200/008080/fff?text=Sehan', description: 'Anak dari Bapak Uwa.', parents: ['anak4'], children: [], address: 'Jl. Cucu D4', mapsLink: '#' },
+                hilman: { name: 'Hilman', pic: 'https://placehold.co/200x200/008080/fff?text=Hilman', description: 'Anak dari Bapak Uwa.', parents: ['anak4'], children: [], address: 'Jl. Cucu D5', mapsLink: '#' },
+                berlin: { name: 'Berlin', pic: 'https://placehold.co/200x200/008080/fff?text=Berlin', description: 'Anak dari Bapak Uwa.', parents: ['anak4'], children: [], address: 'Jl. Cucu D6', mapsLink: '#' },
+
+            
+            // Anak 5: Nurlelah
+            anak5: { name: 'Nurlelah', pic: 'https://placehold.co/200x200/008080/fff?text=Nurlelah', description: 'Anak kelima dari Abah Jaya dan Emak.', parents: ['kakek', 'nenek'], children: ['hilmi', 'nayla', 'ayu'], address: 'Jl. Kenangan No. 1, Jakarta', mapsLink: '#' },
+            
+                // Cucu dari Nurlelah
+                hilmi: { name: 'Hilmi Wahdi', pic: 'https://placehold.co/200x200/008080/fff?text=Hilmi', description: 'Anak dari Nurlelah.', parents: ['anak5'], children: [], address: 'Jl. Cucu E1', mapsLink: '#' },
+                nayla: { name: 'Nayla', pic: 'https://placehold.co/200x200/008080/fff?text=Nayla', description: 'Anak dari Nurlelah.', parents: ['anak5'], children: [], address: 'Jl. Cucu E2', mapsLink: '#' },
+                ayu: { name: 'Ayu', pic: 'https://placehold.co/200x200/008080/fff?text=Ayu', description: 'Anak dari Nurlelah.', parents: ['anak5'], children: [], address: 'Jl. Cucu E3', mapsLink: '#' },
+
+            // Anak 6: Haulah & Rusdi
+            anak6: { name: 'Haulah', pic: 'https://placehold.co/200x200/008080/fff?text=Haulah', description: 'Anak keenam dari Abah Jaya dan Emak.', parents: ['kakek', 'nenek'], spouse: 'rusdi', children: ['lulu', 'ameyda'], address: 'Jl. Kenangan No. 1, Jakarta', mapsLink: '#' },
+            rusdi: { name: 'Rusdi', pic: 'https://placehold.co/200x200/008080/fff?text=Rusdi', description: 'Suami dari Haulah.', spouse: 'anak6', parents: [], children: ['lulu', 'ameyda'], address: 'Jl. Kenangan No. 1, Jakarta', mapsLink: '#' },
+
+                // Cucu dari Haulah
+                lulu: { name: 'Lulu Afiah', pic: 'https://placehold.co/200x200/008080/fff?text=Lulu', description: 'Anak dari Haulah dan Rusdi.', parents: ['anak6', 'rusdi'], spouse: 'rizal', children: [], address: 'Jl. Cucu F1', mapsLink: '#' },
+                rizal: { name: 'Rizal', pic: 'https://placehold.co/200x200/008080/fff?text=Rizal', description: 'Suami dari Lulu Afiah.', spouse: 'lulu', parents: [], children: [], address: 'Jl. Cucu F1', mapsLink: '#' },
+                ameyda: { name: 'Ameyda Kamilah', pic: 'https://placehold.co/200x200/008080/fff?text=Ameyda', description: 'Anak dari Haulah dan Rusdi.', parents: ['anak6', 'rusdi'], children: [], address: 'Jl. Cucu F2', mapsLink: '#' }
+        };
+        
+        const members = document.querySelectorAll('.member');
+        const modal = document.getElementById('profile-modal');
+        const closeModalBtn = document.getElementById('close-modal');
+        const modalName = document.getElementById('modal-name');
+        const modalPic = document.getElementById('modal-pic');
+        const modalDesc = document.getElementById('modal-desc');
+        const modalAddressContainer = document.getElementById('modal-address-container');
+        const modalAddress = document.getElementById('modal-address');
+        const modalMapsLink = document.getElementById('modal-maps-link');
+        const modalGallery = document.getElementById('modal-gallery');
+        const modalSilsilahContainer = document.getElementById('modal-silsilah-container');
+
+        function createMiniMemberHTML(memberId) {
+            if (!familyData[memberId]) return '';
+            const member = familyData[memberId];
+            return `<div class="mini-member text-center text-xs p-2 border border-gray-300 dark:border-gray-600 rounded-md" data-member="${memberId}">
+                        <img src="${member.pic}" class="w-12 h-12 rounded-full mx-auto mb-1 object-cover pointer-events-none" onerror="this.src='https://placehold.co/48x48/e0e0e0/333?text=Gagal'">
+                        <strong class="pointer-events-none">${member.name}</strong>
+                    </div>`;
+        }
+
+        function buildMiniSilsilah(memberId) {
+            const member = familyData[memberId];
+            if (!member) return '';
+
+            let html = '<h3 class="text-xl font-lora text-gray-800 dark:text-white border-b border-gray-200 dark:border-gray-600 pb-2 mb-4">Silsilah Mini</h3>';
+            html += '<div class="space-y-4">';
+
+            // Kakek Buyut (jika cicit)
+            if (member.parents && member.parents.length > 0 && 
+                familyData[member.parents[0]]?.parents && familyData[member.parents[0]].parents.length > 0 &&
+                familyData[familyData[member.parents[0]].parents[0]]?.parents) {
+                
+                const grandParent = familyData[member.parents[0]]; // Ortu dari Cicit
+                const greatGrandParentKey = grandParent.parents[0]; // Ortu dari Kakek/Nenek
+                const greatGrandParent = familyData[greatGrandParentKey]; // Data Ortu Kakek/Nenek
+                
+                if (greatGrandParent.parents && greatGrandParent.parents.length > 0) {
+                     html += `<div><p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Kakek & Nenek Buyut</p><div class="flex justify-center gap-2">${greatGrandParent.parents.map(createMiniMemberHTML).join('')}</div></div>`;
+                }
+            }
+
+            // Kakek/Nenek dari orang tua (jika ada)
+            if (member.parents && member.parents.length > 0 && familyData[member.parents[0]]?.parents) {
+                const parent = familyData[member.parents[0]];
+                if (parent.parents && parent.parents.length > 0) {
+                     html += `<div><p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Kakek & Nenek</p><div class="flex justify-center gap-2">${parent.parents.map(createMiniMemberHTML).join('')}</div></div>`;
+                }
+            }
+
+
+            if (member.parents && member.parents.length > 0) {
+                html += `<div><p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Orang Tua</p><div class="flex justify-center gap-2">${member.parents.map(createMiniMemberHTML).join('')}</div></div>`;
+            }
+
+            let selfHtml = createMiniMemberHTML(memberId);
+            if (member.spouse) {
+                selfHtml += createMiniMemberHTML(member.spouse);
+            }
+            html += `<div><p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Diri Sendiri & Pasangan</p><div class="flex justify-center gap-2">${selfHtml}</div></div>`;
+
+            if (member.children && member.children.length > 0) {
+                html += `<div><p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Anak-anak</p><div class="flex justify-center gap-2 flex-wrap">${member.children.map(createMiniMemberHTML).join('')}</div></div>`;
+            }
+
+            html += '</div>';
+            return html;
+        }
+
+        function updateModalContent(memberId) {
+            const data = familyData[memberId];
+            if (data) {
+                modalName.textContent = data.name;
+                modalPic.src = data.pic;
+                modalPic.onerror = () => { modalPic.src = 'https://placehold.co/200x200/e0e0e0/333?text=Gagal+Muat'; };
+                modalDesc.textContent = data.description;
+                
+                if (data.address && data.mapsLink) {
+                    modalAddress.textContent = data.address;
+                    modalMapsLink.href = data.mapsLink;
+                    modalAddressContainer.classList.remove('hidden');
+                } else {
+                    modalAddressContainer.classList.add('hidden');
+                }
+
+                modalSilsilahContainer.innerHTML = buildMiniSilsilah(memberId);
+                modalGallery.innerHTML = '';
+                if (data.gallery && data.gallery.length > 0) {
+                    data.gallery.forEach(item => {
+                        const galleryItem = document.createElement('div');
+                        galleryItem.className = 'relative rounded-lg overflow-hidden aspect-video bg-gray-200 dark:bg-gray-700';
+                        if (item.type === 'image') {
+                            galleryItem.innerHTML = `<img src="${item.src}" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML='<div class=flex items-center justify-center h-full>Gagal memuat gambar</div>'">`;
+                        }
+                        modalGallery.appendChild(galleryItem);
+                    });
+                } else {
+                    modalGallery.innerHTML = `<p class="text-gray-500 dark:text-gray-400 col-span-full">Belum ada kenangan yang ditambahkan.</p>`;
+                }
+            }
+        }
+
+        // --- PENTING: Perbarui event listener untuk modal ---
+        // Kita tidak bisa mengambil 'members' di awal, karena modal silsilah mini dibuat dinamis
+        
+        function openModalLogic(memberId) {
+             const data = familyData[memberId];
+             if (data) {
+                updateModalContent(memberId);
+                modal.classList.remove('hidden');
+                // Efek transisi
+                setTimeout(() => modal.classList.add('modal-open'), 10);
+             }
+        }
+
+        // Listener untuk pohon utama
+        document.querySelector('.family-tree').addEventListener('click', (e) => {
+             const clickedMember = e.target.closest('.member');
+             if (clickedMember) {
+                 const memberId = clickedMember.getAttribute('data-member');
+                 openModalLogic(memberId);
+             }
+        });
+
+        // Listener untuk silsilah mini di dalam modal
+        modalSilsilahContainer.addEventListener('click', (e) => {
+            const clickedMember = e.target.closest('.mini-member');
+            if (clickedMember) {
+                const memberId = clickedMember.getAttribute('data-member');
+                updateModalContent(memberId); // Cukup perbarui konten modal
+            }
+        });
+        
+        // Listener untuk menutup modal
+        const closeModalFunc = () => {
+            modal.classList.remove('modal-open');
+            setTimeout(() => {
+                 modal.classList.add('hidden');
+            }, 300);
+        };
+        closeModalBtn.addEventListener('click', closeModalFunc);
+        modal.addEventListener('click', (e) => {
+            if (e.target.id === 'profile-modal') { // Cek apakah klik di backdrop
+                closeModalFunc();
+            }
+        });
+
+        // --- SCRIPT UNTUK ANIMASI SAAT SCROLL ---
+        const animatedElements = document.querySelectorAll('.animate-in');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry, index) => {
+                if (entry.isIntersecting) {
+                    // Beri sedikit delay acak agar tidak terlalu seragam
+                    const delay = Math.random() * 150 + 50; 
+                    entry.target.style.transitionDelay = `${delay}ms`;
+                    entry.target.classList.add('is-visible');
+                    observer.unobserve(entry.target); // Berhenti mengamati setelah animasi
+                }
+            });
+        }, {
+            threshold: 0.05 // Muncul sedikit lebih cepat
+        });
+        animatedElements.forEach(el => {
+            observer.observe(el);
+        });
+
+        // --- SCRIPT UNTUK ZOOM & PAN ---
+        const treeContainer = document.querySelector('.family-tree-container');
+        const tree = document.querySelector('.family-tree');
+        const zoomInBtn = document.getElementById('zoom-in');
+        const zoomOutBtn = document.getElementById('zoom-out');
+        let scale = 1;
+        
+        zoomInBtn.addEventListener('click', () => {
+            scale = Math.min(2, scale + 0.1); // Batas zoom in
+            tree.style.transform = `scale(${scale})`;
+        });
+
+        zoomOutBtn.addEventListener('click', () => {
+            scale = Math.max(0.3, scale - 0.1); // Batas zoom out (diperkecil)
+            tree.style.transform = `scale(${scale})`;
+        });
+
+        let isDown = false;
+        let startX;
+        let startY;
+        let scrollLeft;
+        let scrollTop;
+
+        treeContainer.addEventListener('mousedown', (e) => {
+            isDown = true;
+            treeContainer.classList.add('grabbing');
+            startX = e.pageX - treeContainer.offsetLeft;
+            startY = e.pageY - treeContainer.offsetTop;
+            scrollLeft = treeContainer.scrollLeft;
+            scrollTop = treeContainer.scrollTop;
+        });
+        treeContainer.addEventListener('mouseleave', () => {
+            isDown = false;
+            treeContainer.classList.remove('grabbing');
+        });
+        treeContainer.addEventListener('mouseup', () => {
+            isDown = false;
+            treeContainer.classList.remove('grabbing');
+        });
+        treeContainer.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - treeContainer.offsetLeft;
+            const y = e.pageY - treeContainer.offsetTop;
+            const walkX = (x - startX) * 2; // Kecepatan geser horizontal
+            const walkY = (y - startY) * 2; // Kecepatan geser vertikal
+            treeContainer.scrollLeft = scrollLeft - walkX;
+            treeContainer.scrollTop = scrollTop - walkY;
+        });
+
+    </script>
+
+</body>
+</html>
+
